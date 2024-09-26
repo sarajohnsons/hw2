@@ -1,0 +1,132 @@
+---
+title: "hw2"
+format: html
+editor: visual
+---
+
+```{r}
+#libraries
+library(tidyverse)
+library(ggplot2)
+#Read in the csv and I named it something simple
+rst <- read_csv("restaurant_inspections.csv")
+head(rst)
+```
+
+```{r}
+#Getting rid of missing data I saw
+rst <- na.omit(rst)
+```
+
+```{r}
+#1. Visualize the overall distribution of inspection scores using a # histogram.
+
+# Using hist to create a histogram of the scores
+hist(rst$SCORE)
+# Most scores are distributed to the right and are very high
+```
+
+```{r}
+#2. Some restaurants have been in business much longer than others. # is there any trend in terms of how highly older vs. newer # restaurants score on their inspections?
+
+
+#Using gg plot and giving the columns of dataset I want to visualize 
+ggplot(rst, aes(x = RESTAURANTOPENDATE, y = SCORE)) +
+  geom_point() 
+```
+
+```{r}
+#This histogram shows that there is no significant trend in how #highly older vs. newer restuarant's score. The scores are very high #from the left to the right, but there is a slight difference as the #right, has some lower scores (one close to 0) & some estimatedly in #the 80s.
+```
+
+```{r}
+#3. Wake County is the most populous county in North Carolina, and #there are many cities in it. Do the inspection scores vary by city? #Note that the city column contains some differently spelled city #names; make sure to clean those up so that there is only one #estimated value per city. The recode function that we used for #creating a weekend/weekday variable in the SFpark exercise will be #useful here, and you may also be interested in the str_to_upper #function. 
+#Make these upper case so theyre uniform 
+rst$CITY <- str_to_upper(rst$CITY)
+#Some had spelling mistakes or were the same city just named differently so this fixes it 
+rst$CITY <- recode(rst$CITY,
+                "FUQUAY-VARINA" = "FUQUAY VARINA",
+                "HOLLY SPRING" = "HOLLY SPRINGS",
+                "MORRISVILE" = "MORRISVILLE",
+                "RIP" = "RESEARCH TRIANGLE PARK")
+
+#Grouping and getting the averages
+citysc<- summarize(group_by(rst, CITY), avg_score = mean(SCORE, na.rm = TRUE))
+#Here I can see the cities and their scores
+citysc
+```
+
+```{r}
+# Okay, now my plot of the scores per city
+#Plotting with ggplot and I also changed the way orentation was so that I could see all the names clearly 
+ggplot(citysc, aes(x = reorder(CITY, avg_score), y = avg_score)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Scores & City",
+       x = "City",
+       y = "Score") +   coord_flip()
+#The inspection scores do vary slightly by city. Even though Wake #County is the most populous city, it does not have the highest #inspection score.
+```
+
+```{r}
+#4. Wake County employs a whole team of inspectors. It is possible #that some inspectors may be more thorough than others. Do #inspection scores vary by inspector? 
+#Making this only Wake Forest 
+wake <- filter(rst, CITY == "WAKE FOREST")
+#Grouping by inspector so we can see their specific scores
+wakeinspect <- summarize(group_by(wake, INSPECTOR), avg_score = mean(SCORE, na.rm = TRUE))
+wakeinspect
+#Yes, the scores do differ based on inspector. No 2 inspectors have #the same exact score given. They are very close in score except #Lisa McCoy who has the lowest.
+```
+
+```{r}
+#5. It is possible that some extreme results from the previous #questions are due to small sample sizes in a particular city, for a #particular inspector, or in a particular time period. Look at the #sample sizes in each of your groups. Do you think this is an #explanation for the results you came to above?
+
+#Number of sample size of only wake, for the bigger dataset rst i just looked to the right in Environment and saw the sample size  
+wakesamplesize <- dim(wake)
+wakesamplesize
+
+#The sample size for just Wake Forest is 185 which is much smaller #than the original sample size of all the cities which was 3064 #after excluding NAs.
+```
+
+```{r}
+#6. The data file contains records for many types of food-service #facility (e.g. restaurants, food trucks, etc.). Are the scores for #restaurants higher than other types of facility?
+
+#Group by type so we can see scores of all of them
+
+typeof <- summarize(group_by(rst, FACILITYTYPE),avg_score = mean(SCORE, na.rm = TRUE))
+
+typeof
+
+#The scores for restaurants not higher than any of the other types #of facilities, they are the lowest out of all the types. 
+```
+
+```{r}
+#3. Since restaurants are where the general public is most likely to #interact with the food-service system, Wake County Public Health is #particularly interested in sanitation in restaurants. Repeat the #analyses above (1-5) for restaurants specifically.
+
+#Filtering all data to only Restaurants
+rest <- filter(rst, FACILITYTYPE == "Restaurant")
+rest
+
+#Histogram to look at scores
+hist(rest$SCORE)
+#Most are very high and fall into 80-100
+
+#Trends in when they opened
+ggplot(rest, aes(x = RESTAURANTOPENDATE, y = SCORE)) +
+  geom_point() 
+#Again I see that there is not much of a difference, but a slight #lower score towards right
+
+#Looking at average score for just restuarants
+restsc<- summarize(group_by(rest, CITY), avg_score = mean(SCORE, na.rm = TRUE))
+restsc
+
+#Finding inspector scores for just these observations
+restinspect <- summarize(group_by(rest, INSPECTOR), avg_score = mean(SCORE, na.rm = TRUE))
+restinspect
+
+# Looking at the right in my environment, I see I have 2044 observations of 12 variables when before I had 3064 when I was looking at all typed. So this may effect study, although 2044 is still large.
+
+```
+
+https://github.com/sarajohnsons/hw2
+
+link to my repository
